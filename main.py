@@ -23,6 +23,7 @@ from ops import dataset_config
 from ops.utils import AverageMeter, accuracy
 from tensorboardX import SummaryWriter
 from torch.utils.data import *
+from ops.tc_reordering import NTCHW_to_TC_NTCHW 
 import torchvision
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3,4,5,6,7'
@@ -188,7 +189,7 @@ def main():
     if args.evaluate:
         logger.info(("===========evaluate==========="))
         val_loader.sampler.set_epoch(args.start_epoch)
-        prec1, prec5, val_loss = validate(val_loader, model, criterion, logger)
+        prec1, prec5, val_loss = validate(val_loader, model, criterion, logger, TC=args.TC)
         if dist.get_rank() == 0:
             is_best = prec1 > best_prec1
             best_prec1 = prec1
@@ -208,7 +209,7 @@ def main():
 
     for epoch in range(args.start_epoch, args.epochs):
         train_loader.sampler.set_epoch(epoch)
-        train_loss, train_top1, train_top5 = train(train_loader, model, criterion, optimizer, epoch=epoch, logger=logger, scheduler=scheduler)
+        train_loss, train_top1, train_top5 = train(train_loader, model, criterion, optimizer, epoch=epoch, logger=logger, scheduler=scheduler, TC=args.TC)
         if dist.get_rank() == 0:
             tf_writer.add_scalar('loss/train', train_loss, epoch)
             tf_writer.add_scalar('acc/train_top1', train_top1, epoch)
@@ -217,7 +218,7 @@ def main():
 
         if (epoch + 1) % args.eval_freq == 0 or epoch == args.epochs - 1:
             val_loader.sampler.set_epoch(epoch)
-            prec1, prec5, val_loss = validate(val_loader, model, criterion, logger)
+            prec1, prec5, val_loss = validate(val_loader, model, criterion, logger, TC=args.TC)
             if dist.get_rank() == 0:
                 tf_writer.add_scalar('loss/test', val_loss, epoch)
                 tf_writer.add_scalar('acc/test_top1', prec1, epoch)
@@ -242,7 +243,7 @@ def main():
                     }, save_epoch, is_best)
 
 
-def train(train_loader, model, criterion, optimizer, epoch, logger=None, scheduler=None):
+def train(train_loader, model, criterion, optimizer, epoch, logger=None, scheduler=None, TC=False):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -261,6 +262,9 @@ def train(train_loader, model, criterion, optimizer, epoch, logger=None, schedul
 
         data_time.update(time.time() - end)
         target = target.cuda()
+        if TC:
+            input = NTCHW_to_TC_NTCHW(input)
+
         input_var = input.cuda()
         target_var = target
         output = model(input_var)
@@ -295,7 +299,7 @@ def train(train_loader, model, criterion, optimizer, epoch, logger=None, schedul
     return losses.avg, top1.avg, top5.avg
 
 
-def validate(val_loader, model, criterion, logger=None):
+def validate(val_loader, model, criterion, logger=None, TC=False):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -307,6 +311,8 @@ def validate(val_loader, model, criterion, logger=None):
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
             target = target.cuda()
+            if TC:
+                input = NTCHW_to_TC_NTCHW(input)
             output = model(input)
 
             loss = criterion(output, target)

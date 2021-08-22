@@ -47,6 +47,7 @@ parser.add_argument('--weight-decay', '--wd', default=5e-4, type=float, metavar=
 parser.add_argument('--clip-gradient', '--gd', default=None, type=float, metavar='W',
                     help='gradient norm clipping (default: disabled)')
 parser.add_argument('--no_partialbn', '--npb', default=True, action="store_true")
+parser.add_argument('--TC', action="store_true")
 # ========================= Monitor Configs ==========================
 parser.add_argument('--print-freq', '-p', default=20, type=int, metavar='N',
                     help='print frequency (default: 10)')

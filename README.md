@@ -1,3 +1,8 @@
+# Kiyoon note
+`pip install termcolor`  
+Use `generate_somethingv1_splits.py` with `--root` argument and no other optional arguments.  
+Add `--TC` argument in main.py to enable TC Reordering.
+
 # TDN: Temporal Difference Networks for Efficient Action Recognition (CVPR 2021)
 
 ![1](https://github.com/MCG-NJU/TDN/blob/main/TDM.jpg)  
