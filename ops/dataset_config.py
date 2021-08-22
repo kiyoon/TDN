@@ -44,8 +44,8 @@ def return_something(modality):
     filename_categories = 174
     if modality == 'RGB' or modality== 'RGBDiff':
         root_data = "/" 
-        filename_imglist_train = "/home/kiyoon/datasets/something-something-v1/tdn_splits/train.csv"
-        filename_imglist_val = "/home/kiyoon/datasets/something-something-v1/tdn_splits/val.csv"
+        filename_imglist_train = "/dev/shm/datasets/something-something-v1/tdn_splits/train.csv"
+        filename_imglist_val = "/dev/shm/datasets/something-something-v1/tdn_splits/val.csv"
         prefix = '{:05d}.jpg'
     elif modality == 'Flow':
         root_data = ROOT_DATASET + '/your_path_to/something/v1/20bn-something-something-v1-flow'
